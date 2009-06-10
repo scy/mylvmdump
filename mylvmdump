@@ -1,0 +1,62 @@
+#!/bin/sh
+
+# Read configuration values.
+source mylvmdump.conf
+
+# Do not log what we do.
+# It may be confusing when later using mysql interactively.
+export MYSQL_HISTFILE=/dev/null
+
+# List of options for parseable mysql results.
+PARSEABLE='--skip-column-names'
+
+# Initial set of mysqldump options to use.
+DUMPOPTS='--skip-opt --add-drop-table --add-locks --create-options --disable-keys --extended-insert --quick --set-charset'
+
+# Run a MySQL command-line tool, supplying configuration data on FD 4.
+runwithcfg() {
+	# --defaults-extra-file needs to be the first option,
+	# therefore take apart command name and parameters.
+	cmd="$1"
+	shift
+	"$cmd" --defaults-extra-file=/dev/fd/4 "$@" 4<<-EOF
+		[client]
+		user=$user
+		password=$pass
+		host=$host
+		EOF
+}
+
+
+
+# Retrieve the list of databases.
+databases="$(runwithcfg mysql $PARSEABLE <<-"EOF"
+	SHOW DATABASES;
+	EOF
+)"
+# Convert into a space-delimited list.
+databases="$(echo "$databases" | tr '\n' ' ' | sed -r -e 's/(^ +| +$)//g' -e 's/ {2,}/ /g')"
+
+# List available databases, comma-delimited.
+echo -n "Available databases: "
+echo "$databases" | sed -e 's/ /, /g'
+
+# Dump each database.
+for database in $databases; do
+	echo -n "Dumping $database... "
+	dumpname="$database.$(date +%Y-%m-%d-%H-%M).sql.bz2"
+	started="$(date +%s)"
+	runwithcfg mysqldump $DUMPOPTS "$database" |
+		bzip2 > "$dumpname"
+	r="$?"
+	stopped="$(date +%s)"
+	seconds="$(expr "$stopped" - "$started")"
+	if [ "$r" -eq 0 ]; then
+		size="$(stat -c %s "$dumpname")"
+		megs="$(expr "$size" / 1024 / 1024)"
+		echo "ok, $seconds seconds, $megs MiB."
+	fi
+done
+
+# This will be used later on.
+# lvs --noheadings --nosuffix --separator : --units b --options lv_name,lv_size | sed -r -e 's/^ +//'
