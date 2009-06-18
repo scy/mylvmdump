@@ -13,6 +13,12 @@ PARSEABLE='--skip-column-names'
 # Initial set of mysqldump options to use.
 DUMPOPTS='--skip-opt --add-drop-table --add-locks --create-options --disable-keys --extended-insert --quick --set-charset'
 
+# Exit with an error message.
+die() {
+	echo "$1"
+	exit 1
+}
+
 # Run a MySQL command-line tool, supplying configuration data on FD 4.
 runwithcfg() {
 	# --defaults-extra-file needs to be the first option,
@@ -26,6 +32,18 @@ runwithcfg() {
 		host=$host
 		EOF
 }
+
+# Interpret boolean configuration variables.
+bool() {
+	[ -z "${!1}" ] && return 1
+	case "${!1}" in
+		0|-|off|ofF|oFf|oFF|Off|OfF|OFf|OFF|n*|N*|f*|F*)
+			return 1
+			;;
+	esac
+	return 0
+}
+
 
 # Set the precompress command.
 compressdefaults=y
@@ -67,13 +85,16 @@ for database in $databases; do
 	dumpname="$(eval "echo $namepattern")"
 	echo -n "Dumping $database to $dumpname... "
 	started="$(date +%s)"
+	tempname="$(eval "echo $temppattern")"
+	bool tempexists && [ ! -e "$tempname" ] && die "temporary file $tempname does not exist"
 	runwithcfg mysqldump $DUMPOPTS "$database" |
 		"$compresscmd" \
-		> "$dumpname"
+		> "$tempname"
 	r="$?"
-	stopped="$(date +%s)"
-	seconds="$(expr "$stopped" - "$started")"
 	if [ "$r" -eq 0 ]; then
+		mv "$tempname" "$dumpname"
+		stopped="$(date +%s)"
+		seconds="$(expr "$stopped" - "$started")"
 		size="$(stat -c %s "$dumpname")"
 		megs="$(expr "$size" / 1024 / 1024)"
 		echo "ok, $seconds seconds, $megs MiB."

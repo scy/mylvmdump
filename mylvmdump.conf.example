@@ -1,6 +1,10 @@
 # This file is sourced as a shell script.
 # All shell syntax rules apply -- and all magical things you can do.
 
+# Boolean variables may take these values (case insensitive):
+# '' (empty string), '0', '-', 'off', anything starting with n or f (like 'no'
+# or 'false') is interpreted as 'no', anything else as 'yes'.
+
 
 # User name to access the MySQL database.
 user='root'
@@ -33,3 +37,16 @@ compress='gzip'
 # is followed by a character that's valid in variable names, use the syntax
 # '${variable}moretext' as shown in the example. If unsure, always use {}.
 namepattern='$(date "+%Y-%m-%d_%H-%M-%S")_${database}.sql${compresssuffix}'
+
+
+# Temporary file name while dumping. Set to the empty string to dump directly
+# into the final file name. You may use the same variables and constructs as in
+# namepattern. Additionally, you can access the expanded namepattern itself as
+# ${dumpname}. Use of mktemp is suggested. Please see the tempexists setting.
+temppattern='$(mktemp -q --tmpdir=. "$dumpname.tmp.XXXXXXXXXX")'
+
+# Whether the file name in temppattern should be checked fo existence. If this
+# is set, mylvmdump will exit with an error if the temp file does not already
+# exist. This is useful when using mktemp: If mktemp cannot create the file,
+# mylvmdump will (and should) stop.
+tempexists='yes'
