@@ -44,6 +44,14 @@ bool() {
 	return 0
 }
 
+# Run a hook.
+runhook() {
+	declare -F | grep -q " $1\$" || return 1
+	hookname="$1"
+	shift
+	$hookname "$@"
+}
+
 
 # Set the precompress command.
 compressdefaults=y
@@ -99,6 +107,7 @@ for database in $databases; do
 	r="$?"
 	if [ "$r" -eq 0 ]; then
 		[ "$movetemp" = 'y' ] && mv "$tempname" "$dumpname"
+		runhook after_dump
 		stopped="$(date +%s)"
 		seconds="$(expr "$stopped" - "$started")"
 		size="$(stat -c %s "$dumpname")"
