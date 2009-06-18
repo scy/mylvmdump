@@ -1,0 +1,35 @@
+# This file is sourced as a shell script.
+# All shell syntax rules apply -- and all magical things you can do.
+
+
+# User name to access the MySQL database.
+user='root'
+
+# Password to access the MySQL database.
+# Will be supplied securely (via fd) to mysqldump.
+pass='5o0p3r$e(uRe'
+
+# Database host to contact.
+host='dbserver'
+
+
+# Compression tool to use. Current choices are:
+# gzip   (any non-ancient version should work)
+# bzip2  (same here)
+# pbzip2 (you need >=1.0.3)
+# cat    (will not compress at all; the default)
+compress='gzip'
+
+
+# File name pattern of the generated files.
+# You may insert any shell construct here, although variables should be
+# sufficient fo most users. Some variables you might want to use are:
+# $database        name of the database, e.g. 'mediawiki'
+# $compresstype    'gz', 'bz2' or the empty string '' if not compressing
+# $compresssuffix  $compresstype, but prefixed by a dot if non-empty ('.gz')
+# $(date "+...")   see date(1) for the available options
+# This string will be evaluated using "eval", so please put it in single quotes,
+# use double quotes inside it and don't add security holes. If a variable name
+# is followed by a character that's valid in variable names, use the syntax
+# '${variable}moretext' as shown in the example. If unsure, always use {}.
+namepattern='$(date "+%Y-%m-%d_%H-%M-%S")_${database}.sql${compresssuffix}'

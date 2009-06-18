@@ -28,8 +28,8 @@ runwithcfg() {
 }
 
 # Set the precompress command.
-precompressdefaults=y
-case "$precompress" in
+compressdefaults=y
+case "$compress" in
 	gzip)
 		compresstype=gz
 		;;
@@ -37,13 +37,15 @@ case "$precompress" in
 		compresstype=bz2
 		;;
 	*)
-		precompresscmd='cat'
-		precompressdefaults=n
+		compresscmd='cat'
+		compresstype=''
+		compresssuffix=''
+		compressdefaults=n
 		;;
 esac
-if [ "$precompressdefaults" = 'y' ]; then
+if [ "$compressdefaults" = 'y' ]; then
 	compresssuffix=".$compresstype"
-	precompresscmd="$precompress"
+	compresscmd="$compress"
 fi
 
 
@@ -62,11 +64,11 @@ echo "$databases" | sed -e 's/ /, /g'
 
 # Dump each database.
 for database in $databases; do
-	echo -n "Dumping $database... "
-	dumpname="$database.$(date +%Y-%m-%d-%H-%M).sql$compresssuffix"
+	dumpname="$(eval "echo $namepattern")"
+	echo -n "Dumping $database to $dumpname... "
 	started="$(date +%s)"
 	runwithcfg mysqldump $DUMPOPTS "$database" |
-		"$precompresscmd" \
+		"$compresscmd" \
 		> "$dumpname"
 	r="$?"
 	stopped="$(date +%s)"
