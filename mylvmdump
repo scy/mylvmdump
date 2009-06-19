@@ -62,6 +62,19 @@ checkfreespace() {
 }
 
 
+# Read command-line options.
+purgeonly=n
+while getopts p o; do
+	case "$o" in
+		p)
+			purgeonly=y
+			;;
+		*)
+			exit 1
+			;;
+	esac
+done
+
 # Check for a useful keepfree value.
 keepfree="$(echo "$keepfree" | tr a-z A-Z | tr -cd 0-9KMGTPEZYB)"
 if [ "$keepfree" != "$(echo "$keepfree" | grep -E '^[1-9][0-9]*[KMGTPEZY]B?')" ]; then
@@ -91,45 +104,47 @@ fi
 
 
 
-# Retrieve the list of databases.
-databases="$(runwithcfg mysql $PARSEABLE <<-"EOF"
-	SHOW DATABASES;
-	EOF
-)"
-# Convert into a space-delimited list.
-databases="$(echo "$databases" | tr '\n' ' ' | sed -r -e 's/(^ +| +$)//g' -e 's/ {2,}/ /g')"
-
-# List available databases, comma-delimited.
-echo -n "Available databases: "
-echo "$databases" | sed -e 's/ /, /g'
-
-# Dump each database.
-for database in $databases; do
-	dumpname="$(eval "echo $namepattern")"
-	echo -n "Dumping $database to $dumpname... "
-	started="$(date +%s)"
-	tempname="$(eval "echo $temppattern")"
-	if [ -z "$tempname" ]; then
-		tempname="$dumpname"
-		movetemp=n
-	else
-		movetemp=y
-	fi
-	bool tempexists && [ ! -e "$tempname" ] && die "temporary file $tempname does not exist"
-	runwithcfg mysqldump $DUMPOPTS "$database" |
-		"$compresscmd" \
-		> "$tempname"
-	r="$?"
-	if [ "$r" -eq 0 ]; then
-		[ "$movetemp" = 'y' ] && mv "$tempname" "$dumpname"
-		runhook after_dump
-		stopped="$(date +%s)"
-		seconds="$(expr "$stopped" - "$started")"
-		size="$(stat -c %s "$dumpname")"
-		megs="$(expr "$size" / 1024 / 1024)"
-		echo "ok, $seconds seconds, $megs MiB."
-	fi
-done
+if ! bool purgeonly; then
+	# Retrieve the list of databases.
+	databases="$(runwithcfg mysql $PARSEABLE <<-"EOF"
+		SHOW DATABASES;
+		EOF
+	)"
+	# Convert into a space-delimited list.
+	databases="$(echo "$databases" | tr '\n' ' ' | sed -r -e 's/(^ +| +$)//g' -e 's/ {2,}/ /g')"
+	
+	# List available databases, comma-delimited.
+	echo -n "Available databases: "
+	echo "$databases" | sed -e 's/ /, /g'
+	
+	# Dump each database.
+	for database in $databases; do
+		dumpname="$(eval "echo $namepattern")"
+		echo -n "Dumping $database to $dumpname... "
+		started="$(date +%s)"
+		tempname="$(eval "echo $temppattern")"
+		if [ -z "$tempname" ]; then
+			tempname="$dumpname"
+			movetemp=n
+		else
+			movetemp=y
+		fi
+		bool tempexists && [ ! -e "$tempname" ] && die "temporary file $tempname does not exist"
+		runwithcfg mysqldump $DUMPOPTS "$database" |
+			"$compresscmd" \
+			> "$tempname"
+		r="$?"
+		if [ "$r" -eq 0 ]; then
+			[ "$movetemp" = 'y' ] && mv "$tempname" "$dumpname"
+			runhook after_dump
+			stopped="$(date +%s)"
+			seconds="$(expr "$stopped" - "$started")"
+			size="$(stat -c %s "$dumpname")"
+			megs="$(expr "$size" / 1024 / 1024)"
+			echo "ok, $seconds seconds, $megs MiB."
+		fi
+	done
+fi
 
 # Purge older dumps, if configured to.
 purge="$(echo "$purge" | grep -Ev '^[[:space:]]*$')"
