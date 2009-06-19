@@ -57,8 +57,11 @@ checkfreespace() {
 	[ -z "$keepfree" ] && return 0
 	dir="$(dirname "$1")"
 	suf="$(echo "$keepfree" | tr -cd 'A-Z')"
+	num="$(echo "$keepfree" | tr -cd '0-9')"
 	free="$(df -B "1$suf" "$dir" | tail -n +2 | awk '{ print $4 }')"
-	[ "$free" -ge "$keepfree" ]
+	[ "$free" -ge "$num" ] && return 0
+	echo "not enough space: only $free$suf left, requiring $num$suf"
+	return 1
 }
 
 
@@ -130,6 +133,7 @@ if ! bool purgeonly; then
 			movetemp=y
 		fi
 		bool tempexists && [ ! -e "$tempname" ] && die "temporary file $tempname does not exist"
+		checkfreespace "$tempname" && \
 		runwithcfg mysqldump $DUMPOPTS "$database" |
 			"$compresscmd" \
 			> "$tempname"
