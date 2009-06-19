@@ -116,5 +116,14 @@ for database in $databases; do
 	fi
 done
 
+# Purge older dumps, if configured to.
+purge="$(echo "$purge" | grep -Ev '^[[:space:]]*$')"
+echo "$purge" | while read line; do
+	pattern="$(echo "$line" | cut -d '|' -f 1)"
+	date="$(echo "$line" | cut -d '|' -f 2)"
+	echo "Purging all '$pattern' older than $date... "
+	find -name "$pattern" -and -not -newermt "$date" -print -exec rm '{}' \; | sed -e 's/^/\t/'
+done
+
 # This will be used later on.
 # lvs --noheadings --nosuffix --separator : --units b --options lv_name,lv_size | sed -r -e 's/^ +//'

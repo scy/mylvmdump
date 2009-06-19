@@ -38,7 +38,6 @@ compress='gzip'
 # '${variable}moretext' as shown in the example. If unsure, always use {}.
 namepattern='$(date "+%Y-%m-%d_%H-%M-%S")_${database}.sql${compresssuffix}'
 
-
 # Temporary file name while dumping. Set to the empty string to dump directly
 # into the final file name. You may use the same variables and constructs as in
 # namepattern. Additionally, you can access the expanded namepattern itself as
@@ -50,6 +49,19 @@ temppattern='$(mktemp -q --tmpdir=. "$dumpname.tmp.XXXXXXXXXX")'
 # exist. This is useful when using mktemp: If mktemp cannot create the file,
 # mylvmdump will (and should) stop.
 tempexists='yes'
+
+
+# Since you might want to delete older dumps on a regular basis, mylvmdump makes
+# it easy. Enter a file pattern and a date(1) compatible time specification to
+# select the maximum file age, delimited by a pipe character ("|"). You may
+# enter multiple lines to do several runs with different patterns or times.
+# Internally this is passed to "find -name PATTERN -and -not -newermt TIME",
+# you are encouraged to test your patterns using find(1). The example will
+# delete some files if they are older than 6 hours, others if older than 24.
+purge='
+????-??-??_??-??-??_*.sql.*|6 hours ago
+*.sql.*|24 hours ago
+'
 
 
 # Hooks are a powerful way to extend mylvmdump's behavior. They are called
