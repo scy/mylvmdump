@@ -50,6 +50,12 @@ temppattern='$(mktemp -q --tmpdir=. "$dumpname.tmp.XXXXXXXXXX")'
 # mylvmdump will (and should) stop.
 tempexists='yes'
 
+# Refuse to create another dump if the free disk space sinks below this value.
+# You may use suffixes like K, M, G, T etc. Note that this is only checked
+# before each dump. No further checks will be made while the dump of a single
+# database is running, so make sure no dump will be larger than this value.
+keepfree='4G'
+
 
 # Since you might want to delete older dumps on a regular basis, mylvmdump makes
 # it easy. Enter a file pattern and a date(1) compatible time specification to

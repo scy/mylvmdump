@@ -52,6 +52,21 @@ runhook() {
 	$hookname "$@"
 }
 
+# Check the free space.
+checkfreespace() {
+	[ -z "$keepfree" ] && return 0
+	dir="$(dirname "$1")"
+	suf="$(echo "$keepfree" | tr -cd 'A-Z')"
+	free="$(df -B "1$suf" "$dir" | tail -n +2 | awk '{ print $4 }')"
+	[ "$free" -ge "$keepfree" ]
+}
+
+
+# Check for a useful keepfree value.
+keepfree="$(echo "$keepfree" | tr a-z A-Z | tr -cd 0-9KMGTPEZYB)"
+if [ "$keepfree" != "$(echo "$keepfree" | grep -E '^[1-9][0-9]*[KMGTPEZY]B?')" ]; then
+	die "Strange keepfree value '$keepfree'."
+fi
 
 # Set the precompress command.
 compressdefaults=y
