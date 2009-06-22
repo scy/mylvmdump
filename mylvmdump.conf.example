@@ -25,6 +25,24 @@ host='dbserver'
 compress='gzip'
 
 
+# Controls which databases will be backed up and which not. Format is:
+# One expression per line, consisting of an optional mode prefix, an inclusion
+# flag (+ or -) and the database name or expression (depending on the mode
+# prefix). Mode prefixes are: "." for exact matches, the default (i.e. can be
+# omitted). "^" for regular expression matches, anything your local grep -E
+# supports is available. The inclusion flag decides whether the database will be
+# dumped (+) or not (-). The last matching line wins. Mode prefixes must come
+# before the flag. No whitespace between any component.
+dbfilter='
+^-^log.*
+-useless
++logarithms
+'
+
+# The default inclusion flag, if no dbfilter line matches.
+dbfilterdefault='+'
+
+
 # File name pattern of the generated files.
 # You may insert any shell construct here, although variables should be
 # sufficient fo most users. Some variables you might want to use are:
