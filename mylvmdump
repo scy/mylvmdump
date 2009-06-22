@@ -113,15 +113,14 @@ if ! bool purgeonly; then
 		SHOW DATABASES;
 		EOF
 	)"
-	# Convert into a space-delimited list.
-	databases="$(echo "$databases" | tr '\n' ' ' | sed -r -e 's/(^ +| +$)//g' -e 's/ {2,}/ /g')"
 	
 	# List available databases, comma-delimited.
 	echo -n "Available databases: "
-	echo "$databases" | sed -e 's/ /, /g'
+	echo "$databases" | sed -r -e 's/$/, /' | tr -d '\n' | head -c -2
+	echo
 	
 	# Dump each database.
-	for database in $databases; do
+	echo "$databases" | while read database; do
 		dumpname="$(eval "echo $namepattern")"
 		echo -n "Dumping $database to $dumpname... "
 		started="$(date +%s)"
