@@ -98,6 +98,13 @@ getflag() {
 	done | tail -c 1
 }
 
+# Get a newline-separated list of database names.
+getdatabases() {
+	runwithcfg mysql $PARSEABLE <<-"EOF"
+		SHOW DATABASES;
+		EOF
+}
+
 # Get a newline-separated list of table names in database $1.
 gettables() {
 	runwithcfg mysql $PARSEABLE "$1" <<-"EOF"
@@ -168,10 +175,7 @@ fi
 
 if ! bool purgeonly; then
 	# Retrieve the list of databases.
-	databases="$(runwithcfg mysql $PARSEABLE <<-"EOF"
-		SHOW DATABASES;
-		EOF
-	)"
+	databases="$(getdatabases)"
 	
 	# List available databases, comma-delimited.
 	echo -n "Available databases: "
