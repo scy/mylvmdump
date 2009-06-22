@@ -36,11 +36,47 @@ compress='gzip'
 dbfilter='
 ^-^log.*
 -useless
-+logarithms
+.+logarithms
 '
 
 # The default inclusion flag, if no dbfilter line matches.
 dbfilterdefault='+'
+
+# The same thing is possible for tables. The major difference is that the filter
+# rules are specified in multiple variables, one for each database. The variable
+# is named "tablefilter_HASH_VALUE", where HASH is a hash function name and
+# VALUE is the hash value of the database name. This is required because
+# database names can contain characters which are not valid in shell variable
+# names. Allowed hash functions are currently "md5", "sha1" and "sha512", if
+# they are available on your system (else the variable will be ignored). Get the
+# hash value for example by running "echo -n 'crazy db-name' | md5sum". Pay
+# attention not to include a newline character in the database name (hence -n).
+# If your database name only consists of a-zA-Z0-9_ and starts with a letter
+# (most should), you may also use the shorthand variable name
+# "tablefilter__NAME". Note that the dash ("-") is _not_ an allowed character.
+# If you want to use a shared filter list for _all_ tables, set "tablefilter" to
+# it. This list will then be prepended to all database-specific expressions.
+# Available inclusion flags are not only "+" (include) and "-" (exclude), but
+# also "~", which means "no data" and will only dump the CREATE TABLE statement,
+# but not include the table's data.
+
+# First of all, exclude the table "nonsense" in each database where it occurs.
+tablefilter='
+-nonsense
+'
+
+# Exclude the data of the tables starting with "log_" in the "foo" database.
+tablefilter__foo='
+^~^log_
+'
+
+# Finally, include the "nonsense" table in the database called "...".
+tablefilter_md5_2f43b42fd833d1e77420a8dae7419000='
++nonsense
+'
+
+# See the dbfilterdefault variable. "~" is allowed.
+tablefilterdefault='+'
 
 
 # File name pattern of the generated files.

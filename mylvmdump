@@ -72,8 +72,7 @@ dbfiltered() {
 # Get the filter flag for database/table $3 by parsing the list in $4. Default
 # flag is $1, allowed characters are $2.
 getflag() {
-	result="$1"
-	echo "$4" | while read line; do
+	result="$(echo "$4" | while read line; do
 		flag=''
 		mode='.'
 		origline="$line"
@@ -89,13 +88,18 @@ getflag() {
 				continue 2
 			fi
 		done
+		if [ -z "$(echo "$flag" | tr -cd "$2")" ]; then
+			continue;
+		fi
 		if [ "$mode" = '.' ]; then
 			[ "$3" = "$line" ] && result="$flag"
 		elif [ "$mode" = '^' ]; then
 			echo "$3" | grep -E -q "$line" 2>/dev/null && result="$flag"
 		fi
 		echo -n "$result"
-	done | tail -c 1
+	done | tail -c 1)"
+	[ -z "$result" ] && result="$1"
+	echo -n "$result"
 }
 
 # Get a newline-separated list of database names.
@@ -113,6 +117,7 @@ gettables() {
 }
 
 # Get the inclusion flag for table $2 in database $1.
+# TODO: The hash value should be cached.
 gettableflag() {
 	# Set to default.
 	flag="$tablefilterdefault"
@@ -125,11 +130,16 @@ gettableflag() {
 	# Get the flag for each of the variables.
 	for var in $vars; do
 		flag="$(getflag "$flag" '+-~' "$2" "${!var}")"
-		echo "\$flag after considering \$$var: $flag"
 	done
 	echo "$flag"
 }
 
+# Get all tables listed in $3 from database $2 with an inclusion flag of $1.
+gettablesmatching() {
+	echo "$3" | while read table; do
+		[ "$(gettableflag "$2" "$table")" = "$1" ] && echo "$table"
+	done
+}
 
 # Read command-line options.
 purgeonly=n
@@ -189,8 +199,7 @@ if ! bool purgeonly; then
 			continue
 		fi
 		dumpname="$(eval "echo $namepattern")"
-		echo -n "Dumping $database to $dumpname... "
-		tables="$(gettables "$database")"
+		echo "$database  ==>  $dumpname"
 		started="$(date +%s)"
 		tempname="$(eval "echo $temppattern")"
 		if [ -z "$tempname" ]; then
@@ -200,10 +209,32 @@ if ! bool purgeonly; then
 			movetemp=y
 		fi
 		bool tempexists && [ ! -e "$tempname" ] && die "temporary file $tempname does not exist"
-		checkfreespace "$tempname" && \
-		runwithcfg mysqldump $DUMPOPTS "$database" |
-			"$compresscmd" \
-			> "$tempname"
+		if checkfreespace "$tempname"; then
+			echo -n '  scanning... '
+			tables="$(gettables "$database")"
+			datatables="$(gettablesmatching '+' "$database" "$tables")"
+			nodatatables="$(gettablesmatching '~' "$database" "$tables")"
+			tablescount="$(echo "$tables" | wc -l)"
+			datatablescount="$(echo "$datatables" | wc -l)"
+			nodatatablescount="$(echo "$nodatatables" | wc -l)"
+			[ -z "$tables" ] && tablescount=0
+			[ -z "$datatables" ] && datatablescount=0
+			[ -z "$nodatatables" ] && nodatatablescount=0
+			echo "$tablescount tables, dumping $datatablescount with data, $nodatatablescount schema-only"
+			echo -n '  dumping... '
+			(
+				if [ "$datatablescount" -gt 0 ]; then
+					echo "$datatables" | while read table; do
+						runwithcfg mysqldump $DUMPOPTS "$database" --tables "$table"
+					done
+				fi
+				if [ "$nodatatablescount" -gt 0 ]; then
+					echo "$nodatatables" | while read table; do
+						runwithcfg mysqldump $DUMPOPTS "$database" --no-data --tables "$table"
+					done
+				fi
+			) | "$compresscmd" > "$tempname"
+		fi
 		r="$?"
 		if [ "$r" -eq 0 ]; then
 			[ "$movetemp" = 'y' ] && mv "$tempname" "$dumpname"
