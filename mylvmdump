@@ -66,18 +66,23 @@ checkfreespace() {
 
 # Check whether a database is filtered or not.
 dbfiltered() {
-	result="$dbfilterdefault"
-	result="$(
-	echo "$dbfilter" | while read line; do
+	[ "$(getflag "$dbfilterdefault" '+-' "$1" "$dbfilter")" = '-' ]
+}
+
+# Get the filter flag for database/table $3 by parsing the list in $4. Default
+# flag is $1, allowed characters are $2.
+getflag() {
+	result="$1"
+	echo "$4" | while read line; do
 		flag=''
 		mode='.'
 		origline="$line"
 		while [ -z "$flag" ]; do
 			char="$(echo "$line" | cut -b 1  2>/dev/null)"
 			line="$(echo "$line" | cut -b 2- 2>/dev/null)"
-			if   [ "$char" = '^' -o "$char" = '.' ]; then
+			if   [ -n "$(echo "$char" | tr -cd '.^')" ]; then
 				mode="$char"
-			elif [ "$char" = '-' -o "$char" = '+' ]; then
+			elif [ -n "$(echo "$char" | tr -cd "$2")" ]; then
 				flag="$char"
 			else
 				# Invalid line (content before flag?)
@@ -85,14 +90,37 @@ dbfiltered() {
 			fi
 		done
 		if [ "$mode" = '.' ]; then
-			[ "$1" = "$line" ] && result="$flag"
+			[ "$3" = "$line" ] && result="$flag"
 		elif [ "$mode" = '^' ]; then
-			echo "$1" | grep -E -q "$line" 2>/dev/null && result="$flag"
+			echo "$3" | grep -E -q "$line" 2>/dev/null && result="$flag"
 		fi
 		echo -n "$result"
 	done | tail -c 1
-	)"
-	[ "$result" = '-' ]
+}
+
+# Get a newline-separated list of table names in database $1.
+gettables() {
+	runwithcfg mysql $PARSEABLE "$1" <<-"EOF"
+		SHOW TABLES;
+		EOF
+}
+
+# Get the inclusion flag for table $2 in database $1.
+gettableflag() {
+	# Set to default.
+	flag="$tablefilterdefault"
+	# Create a list of variable names to consider.
+	vars='tablefilter'
+	[ "$1" = "$(echo "$1" | grep -E "^[a-zA-Z_][0-9a-zA-Z_]*$")" ] && vars="$vars tablefilter__$1"
+	for hash in md5 sha1 sha512; do # Update docs when changing algorithm list.
+		which "${hash}sum" >/dev/null 2>&1 && vars="$vars tablefilter_${hash}_$(echo -n "$1" | ${hash}sum | cut -d ' ' -f 1)"
+	done
+	# Get the flag for each of the variables.
+	for var in $vars; do
+		flag="$(getflag "$flag" '+-~' "$2" "${!var}")"
+		echo "\$flag after considering \$$var: $flag"
+	done
+	echo "$flag"
 }
 
 
@@ -158,6 +186,7 @@ if ! bool purgeonly; then
 		fi
 		dumpname="$(eval "echo $namepattern")"
 		echo -n "Dumping $database to $dumpname... "
+		tables="$(gettables "$database")"
 		started="$(date +%s)"
 		tempname="$(eval "echo $temppattern")"
 		if [ -z "$tempname" ]; then
