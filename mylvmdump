@@ -92,8 +92,6 @@ getflag() {
 		flag=''
 		# Default mode character is ".".
 		mode='.'
-		# TODO: Not needed anymore, take it out.
-		origline="$line"
 		# As long as we have not found a flag...
 		while [ -z "$flag" ]; do
 			# Cut off the first char and shorten $line by one.
