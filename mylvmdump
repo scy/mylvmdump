@@ -72,7 +72,7 @@ checkfreespace() {
 	# If this is more than or equal our minimum, everything is fine.
 	[ "$free" -ge "$num" ] && return 0
 	# Else issue a warning and return false.
-	echo "not enough space: only $free$suf left, requiring $num$suf"
+	echo "  not enough space: only $free$suf left, requiring $num$suf"
 	return 1
 }
 
@@ -258,7 +258,7 @@ if ! bool purgeonly; then
 		# If we are configured to check for tempfile existence (e.g.
 		# because mktemp is used) and the file does not exist, die.
 		bool tempexists && [ ! -e "$tempname" ] && die "temporary file $tempname does not exist"
-		# If we have enough space for it, do the actual dumping.
+		# If we have enough free disk space, do the actual dumping.
 		if checkfreespace "$tempname"; then
 			echo -n '  scanning... '
 			# Tables in the database.
@@ -291,10 +291,6 @@ if ! bool purgeonly; then
 					done
 				fi
 			) | "$compresscmd" > "$tempname"
-		fi
-		r="$?"
-		# TODO: $r is likely to always be 0.
-		if [ "$r" -eq 0 ]; then
 			# If we have to move the tempfile, move it move it.
 			[ "$movetemp" = 'y' ] && mv "$tempname" "$dumpname"
 			runhook after_dump
@@ -303,7 +299,7 @@ if ! bool purgeonly; then
 			size="$(stat -c %s "$dumpname")"
 			megs="$(expr "$size" / 1024 / 1024)"
 			echo "ok, $seconds seconds, $megs MiB."
-		else
+		else # We did not have enough free disk space.
 			# If a tempfile was created while expanding the
 			# temppattern, it may have to be removed.
 			[ "$movetemp" = 'y' ] && rm -f "$tempname"
