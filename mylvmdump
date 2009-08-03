@@ -63,16 +63,12 @@ checkfreespace() {
 	[ -z "$keepfree" ] && return 0
 	# The directory we want to retrieve the free space for.
 	dir="$(dirname "$1")"
-	# Split the setting into number and unit suffix.
-	# Note that sanity checking is done at script startup.
-	suf="$(echo "$keepfree" | tr -cd 'A-Z')"
-	num="$(echo "$keepfree" | tr -cd '0-9')"
 	# Retrieve the free space in the unit "keepfree" is in.
-	free="$(df -B "1$suf" "$dir" | tail -n +2 | awk '{ print $4 }')"
+	free="$(df -B "1$keepfree_suf" "$dir" | tail -n +2 | awk '{ print $4 }')"
 	# If this is more than or equal our minimum, everything is fine.
-	[ "$free" -ge "$num" ] && return 0
+	[ "$free" -ge "$keepfree_num" ] && return 0
 	# Else issue a warning and return false.
-	echo "  not enough space: only $free$suf left, requiring $num$suf"
+	echo "  not enough space: only $free$keepfree_suf left, requiring $keepfree_num$keepfree_suf"
 	return 1
 }
 
@@ -189,11 +185,20 @@ configfile="$(readlink -e "$configfile")" || die 'configuration file does not ex
 # Read configuration values.
 source "$configfile" || die 'could not read configuration file'
 
-# Check for a useful keepfree value.
-# TODO: Parse the value once instead of each time in checkfreespace().
-keepfree="$(echo "$keepfree" | tr a-z A-Z | tr -cd 0-9KMGTPEZYB)"
-if [ "$keepfree" != "$(echo "$keepfree" | grep -E '^[1-9][0-9]*[KMGTPEZY]B?')" ]; then
+# Check and parse the keepfree value.
+# First, translate to upper case and remove spaces.
+keepfree="$(echo "$keepfree" | tr a-z A-Z | tr -d ' \t')"
+# Now, check for the normal format.
+if [ "$keepfree" != "$(echo "$keepfree" | grep -E '^[1-9][0-9]*[KMGTPEZY]B?$')" ]; then
 	die "Strange keepfree value '$keepfree'."
+elif [ -n "$keepfree" ]; then
+	# A value is set, split it into number and suffix.
+	keepfree_num="$(echo "$keepfree" | tr -cd '0-9')"
+	keepfree_suf="$(echo "$keepfree" | tr -cd 'A-Z')"
+else
+	# No value is set, clear number and suffix.
+	keepfree_num=''
+	keepfree_suf=''
 fi
 
 # Set the precompress command.
