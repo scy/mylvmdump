@@ -81,7 +81,7 @@ tablefilterdefault='+'
 
 # File name pattern of the generated files.
 # You may insert any shell construct here, although variables should be
-# sufficient fo most users. Some variables you might want to use are:
+# sufficient for most users. Some variables you might want to use are:
 # $database        name of the database, e.g. 'mediawiki'
 # $compresstype    'gz', 'bz2' or the empty string '' if not compressing
 # $compresssuffix  $compresstype, but prefixed by a dot if non-empty ('.gz')
