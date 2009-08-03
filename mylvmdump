@@ -35,31 +35,46 @@ runwithcfg() {
 
 # Interpret boolean configuration variables.
 bool() {
+	# If the variable is not set, this equals "false".
 	[ -z "${!1}" ] && return 1
+	# If it is set to 0, -, off or anything starting with "n" or "f" (like
+	# "no", "nyet" or "false"), thas equals "false" as well.
 	case "${!1}" in
 		0|-|off|ofF|oFf|oFF|Off|OfF|OFf|OFF|n*|N*|f*|F*)
 			return 1
 			;;
 	esac
+	# Anything else equals true.
 	return 0
 }
 
 # Run a hook.
 runhook() {
+	# Find the hook in the declare -F listing (which is formatted like:)
+	# declare -f functionname
 	declare -F | grep -q " $1\$" || return 1
+	# Store the hook name to be able to pass $@ in a second.
 	hookname="$1"
 	shift
+	# Call the hook.
 	$hookname "$@"
 }
 
 # Check the free space.
 checkfreespace() {
+	# If "keepfree" is not set, we're not looking at disk space at all.
 	[ -z "$keepfree" ] && return 0
+	# The directory we want to retrieve the free space for.
 	dir="$(dirname "$1")"
+	# Split the setting into number and unit suffix.
+	# Note that sanity checking is done at script startup.
 	suf="$(echo "$keepfree" | tr -cd 'A-Z')"
 	num="$(echo "$keepfree" | tr -cd '0-9')"
+	# Retrieve the free space in the unit "keepfree" is in.
 	free="$(df -B "1$suf" "$dir" | tail -n +2 | awk '{ print $4 }')"
+	# If this is more than or equal our minimum, everything is fine.
 	[ "$free" -ge "$num" ] && return 0
+	# Else issue a warning and return false.
 	echo "not enough space: only $free$suf left, requiring $num$suf"
 	return 1
 }
@@ -73,32 +88,50 @@ dbfiltered() {
 # flag is $1, allowed characters are $2.
 getflag() {
 	result="$(echo "$4" | while read line; do
+		# We have not yet retrieved a flag from this line.
 		flag=''
+		# Default mode character is ".".
 		mode='.'
+		# TODO: Not needed anymore, take it out.
 		origline="$line"
+		# As long as we have not found a flag...
 		while [ -z "$flag" ]; do
+			# Cut off the first char and shorten $line by one.
 			char="$(echo "$line" | cut -b 1  2>/dev/null)"
 			line="$(echo "$line" | cut -b 2- 2>/dev/null)"
+			# If $char is a valid mode character, store it.
 			if   [ -n "$(echo "$char" | tr -cd '.^')" ]; then
 				mode="$char"
+			# If $char is a valid flag character, store it.
 			elif [ -n "$(echo "$char" | tr -cd "$2")" ]; then
 				flag="$char"
 			else
-				# Invalid line (content before flag?)
+				# We have not yet found a flag (loop condition)
+				# but content seems to begin, so this is
+				# apparently an invalid line, go on with the
+				# next line.
 				continue 2
 			fi
 		done
+		# If we have not found a flag, go on with the next line.
 		if [ -z "$(echo "$flag" | tr -cd "$2")" ]; then
 			continue;
 		fi
+		# If mode is "exact match", match exactly.
 		if [ "$mode" = '.' ]; then
 			[ "$3" = "$line" ] && result="$flag"
+		# If mode is "regex match", match by regex.
 		elif [ "$mode" = '^' ]; then
 			echo "$3" | grep -E -q "$line" 2>/dev/null && result="$flag"
 		fi
+		# Output the flag we found, if any.
+		# TODO: Rename $result to something less confusing.
 		echo -n "$result"
-	done | tail -c 1)"
+	done | tail -c 1)" # Only take the last flag we found.
+	# If no line matched, set to the default.
+	# TODO: It would be more elegant to echo $1 before looping begins.
 	[ -z "$result" ] && result="$1"
+	# Return the flag.
 	echo -n "$result"
 }
 
@@ -123,12 +156,15 @@ gettableflag() {
 	flag="$tablefilterdefault"
 	# Create a list of variable names to consider.
 	vars='tablefilter'
+	# If the table name is valid in sh variables, add the plain name.
 	[ "$1" = "$(echo "$1" | grep -E "^[a-zA-Z_][0-9a-zA-Z_]*$")" ] && vars="$vars tablefilter__$1"
+	# Add the hashed variable names, if the algorithm is available.
 	for hash in md5 sha1 sha512; do # Update docs when changing algorithm list.
 		which "${hash}sum" >/dev/null 2>&1 && vars="$vars tablefilter_${hash}_$(echo -n "$1" | ${hash}sum | cut -d ' ' -f 1)"
 	done
 	# Get the flag for each of the variables.
 	for var in $vars; do
+		# This works because the current $flag value is passed as default.
 		flag="$(getflag "$flag" '+-~' "$2" "${!var}")"
 	done
 	echo "$flag"
@@ -155,13 +191,14 @@ while getopts p o; do
 done
 
 # Check for a useful keepfree value.
+# TODO: Parse the value once instead of each time in checkfreespace().
 keepfree="$(echo "$keepfree" | tr a-z A-Z | tr -cd 0-9KMGTPEZYB)"
 if [ "$keepfree" != "$(echo "$keepfree" | grep -E '^[1-9][0-9]*[KMGTPEZY]B?')" ]; then
 	die "Strange keepfree value '$keepfree'."
 fi
 
 # Set the precompress command.
-compressdefaults=y
+compressdefaults=y # Means "this is a 'normal' compression algorithm".
 case "$compress" in
 	gzip)
 		compresstype=gz
@@ -170,7 +207,7 @@ case "$compress" in
 		compresstype=bz2
 		;;
 	*)
-		compresscmd='cat'
+		compresscmd='cat' # I call this a useful use of cat.
 		compresstype=''
 		compresssuffix=''
 		compressdefaults=n
@@ -183,6 +220,7 @@ fi
 
 
 
+# If we're not only purging, we're actually doing backups. Yay!
 if ! bool purgeonly; then
 	# Retrieve the list of databases.
 	databases="$(getdatabases)"
@@ -198,36 +236,50 @@ if ! bool purgeonly; then
 			echo "Skipping $database (filtered)."
 			continue
 		fi
+		# Build file name according to configured pattern.
 		dumpname="$(eval "echo $namepattern")"
 		echo "$database  ==>  $dumpname"
+		# Store the time we started at.
 		started="$(date +%s)"
+		# Build tempfile name according to configured pattern.
 		tempname="$(eval "echo $temppattern")"
 		if [ -z "$tempname" ]; then
+			# The user wants us to write directly to the final name.
 			tempname="$dumpname"
 			movetemp=n
 		else
 			movetemp=y
 		fi
+		# If we are configured to check for tempfile existence (e.g.
+		# because mktemp is used) and the file does not exist, die.
 		bool tempexists && [ ! -e "$tempname" ] && die "temporary file $tempname does not exist"
+		# If we have enough space for it, do the actual dumping.
 		if checkfreespace "$tempname"; then
 			echo -n '  scanning... '
+			# Tables in the database.
 			tables="$(gettables "$database")"
+			# Tables that should be dumped fully.
 			datatables="$(gettablesmatching '+' "$database" "$tables")"
+			# Tables where only the schema should be dumped.
 			nodatatables="$(gettablesmatching '~' "$database" "$tables")"
+			# Count the tables.
 			tablescount="$(echo "$tables" | wc -l)"
 			datatablescount="$(echo "$datatables" | wc -l)"
 			nodatatablescount="$(echo "$nodatatables" | wc -l)"
+			# If none matched, wc -l still returns 1. Fix that.
 			[ -z "$tables" ] && tablescount=0
 			[ -z "$datatables" ] && datatablescount=0
 			[ -z "$nodatatables" ] && nodatatablescount=0
 			echo "$tablescount tables, dumping $datatablescount with data, $nodatatablescount schema-only"
 			echo -n '  dumping... '
 			(
+				# Dump full tables (if any are selected).
 				if [ "$datatablescount" -gt 0 ]; then
 					echo "$datatables" | while read table; do
 						runwithcfg mysqldump $DUMPOPTS "$database" --tables "$table"
 					done
 				fi
+				# Dump table schemas (if any are selected).
 				if [ "$nodatatablescount" -gt 0 ]; then
 					echo "$nodatatables" | while read table; do
 						runwithcfg mysqldump $DUMPOPTS "$database" --no-data --tables "$table"
@@ -236,7 +288,9 @@ if ! bool purgeonly; then
 			) | "$compresscmd" > "$tempname"
 		fi
 		r="$?"
+		# TODO: $r is likely to always be 0.
 		if [ "$r" -eq 0 ]; then
+			# If we have to move the tempfile, move it move it.
 			[ "$movetemp" = 'y' ] && mv "$tempname" "$dumpname"
 			runhook after_dump
 			stopped="$(date +%s)"
@@ -245,12 +299,15 @@ if ! bool purgeonly; then
 			megs="$(expr "$size" / 1024 / 1024)"
 			echo "ok, $seconds seconds, $megs MiB."
 		else
+			# If a tempfile was created while expanding the
+			# temppattern, it may have to be removed.
 			[ "$movetemp" = 'y' ] && rm -f "$tempname"
 		fi
 	done
 fi
 
 # Purge older dumps, if configured to.
+# First, cut off empty lines.
 purge="$(echo "$purge" | grep -Ev '^[[:space:]]*$')"
 echo "$purge" | while read line; do
 	pattern="$(echo "$line" | cut -d '|' -f 1)"
