@@ -1,8 +1,5 @@
 #!/bin/sh
 
-# Read configuration values.
-source mylvmdump.conf
-
 # Do not log what we do.
 # It may be confusing when later using mysql interactively.
 export MYSQL_HISTFILE=/dev/null
@@ -177,8 +174,12 @@ gettablesmatching() {
 
 # Read command-line options.
 purgeonly=n
-while getopts p o; do
+configfile=mylvmdump.conf
+while getopts c:p o; do
 	case "$o" in
+		c)
+			configfile="$OPTARG"
+			;;
 		p)
 			purgeonly=y
 			;;
@@ -187,6 +188,12 @@ while getopts p o; do
 			;;
 	esac
 done
+
+# Check for a valid configuration file.
+configfile="$(readlink -e "$configfile")" || die 'configuration file does not exist'
+# FIXME: Security checks (world-writable etc.).
+# Read configuration values.
+source "$configfile" || die 'could not read configuration file'
 
 # Check for a useful keepfree value.
 # TODO: Parse the value once instead of each time in checkfreespace().
