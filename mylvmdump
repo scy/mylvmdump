@@ -84,7 +84,7 @@ dbfiltered() {
 # Get the filter flag for database/table $3 by parsing the list in $4. Default
 # flag is $1, allowed characters are $2.
 getflag() {
-	result="$(echo "$4" | while read line; do
+	result="$1$(echo "$4" | while read line; do
 		# We have not yet retrieved a flag from this line.
 		flag=''
 		# Default mode character is ".".
@@ -123,9 +123,6 @@ getflag() {
 		# TODO: Rename $result to something less confusing.
 		echo -n "$result"
 	done | tail -c 1)" # Only take the last flag we found.
-	# If no line matched, set to the default.
-	# TODO: It would be more elegant to echo $1 before looping begins.
-	[ -z "$result" ] && result="$1"
 	# Return the flag.
 	echo -n "$result"
 }
