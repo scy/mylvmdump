@@ -179,9 +179,11 @@ while getopts c:p o; do
 	esac
 done
 
-# Check for a valid configuration file.
+# Check for a valid and secure configuration file.
 configfile="$(readlink -e "$configfile")" || die 'configuration file does not exist'
-# FIXME: Security checks (world-writable etc.).
+[ -r "$configfile" ] || die 'configuration file is not readable'
+stat -c %A "$configfile" | grep -q 'w.$' 2>/dev/null && die 'configuration file is world-writable'
+stat -c %A "$configfile" | grep -q 'w....$' 2>/dev/null && echo 'SECURITY WARNING: configuration file is group-writable' >&2
 # Read configuration values.
 source "$configfile" || die 'could not read configuration file'
 
