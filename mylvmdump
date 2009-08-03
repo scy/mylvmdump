@@ -84,7 +84,7 @@ dbfiltered() {
 # Get the filter flag for database/table $3 by parsing the list in $4. Default
 # flag is $1, allowed characters are $2.
 getflag() {
-	result="$1$(echo "$4" | while read line; do
+	result="$(echo -n "$1$(echo "$4" | while read line; do
 		# We have not yet retrieved a flag from this line.
 		flag=''
 		# Default mode character is ".".
@@ -114,15 +114,12 @@ getflag() {
 		fi
 		# If mode is "exact match", match exactly.
 		if [ "$mode" = '.' ]; then
-			[ "$3" = "$line" ] && result="$flag"
+			[ "$3" = "$line" ] && echo -n "$flag"
 		# If mode is "regex match", match by regex.
 		elif [ "$mode" = '^' ]; then
-			echo "$3" | grep -E -q "$line" 2>/dev/null && result="$flag"
+			echo "$3" | grep -E -q "$line" 2>/dev/null && echo -n "$flag"
 		fi
-		# Output the flag we found, if any.
-		# TODO: Rename $result to something less confusing.
-		echo -n "$result"
-	done | tail -c 1)" # Only take the last flag we found.
+	done)" | tail -c 1)" # Only take the last flag we found.
 	# Return the flag.
 	echo -n "$result"
 }
