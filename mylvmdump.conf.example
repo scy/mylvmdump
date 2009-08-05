@@ -123,6 +123,13 @@ uselvm='no'
 # Default shown below.
 fifo='command.fifo'
 
+# If the FIFO already exists when mylvmdump tries to create it, this means that
+# either a mylvmdump session has crashed and did not remove it, or that one is
+# currently running. With this option, you can order mylvmdump to try to remove
+# any file named like the fifo (see $fifo above) that may already exist. Do this
+# on your own risk! Defaults to no.
+destroyfifo='no'
+
 # The data directory of your MySQL server. mylvmdump should normally be able to
 # auto-detect it (therefore this is unset by default), but you might have to
 # specify it manually. Note that the user running mylvmdump needs read access to

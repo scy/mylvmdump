@@ -193,8 +193,11 @@ snapshot() {
 	bool uselvm || return
 	# Check whether the FIFO exists.
 	if [ -e "$fifo" ]; then
-		# TODO: Create a 'destroyfifo' option.
-		die "FIFO '$fifo' already exists."
+		if bool destroyfifo; then
+			rm "$fifo" || die "Could not destroy FIFO '$fifo'."
+		else
+			die "FIFO '$fifo' already exists."
+		fi
 	fi
 	# Create the FIFO.
 	mkfifo -m 0600 "$fifo" || die "Could not create FIFO '$fifo'."
