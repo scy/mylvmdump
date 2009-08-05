@@ -165,6 +165,12 @@ gettablesmatching() {
 	done
 }
 
+# Assume that the tables are frozen and create the snapshot.
+createsnapshot() {
+	# TODO.
+	:
+}
+
 # Create an LVM snapshot of the database.
 snapshot() {
 	# Check whether the FIFO exists.
@@ -174,11 +180,18 @@ snapshot() {
 	fi
 	# Create the FIFO.
 	mkfifo -m 0600 "$fifo" || die "Could not create FIFO '$fifo'."
+	# The following would lock until the reader (mysql) terminated, which is not
+	# what we want. Therefore, run it in the background.
 	echo "$FLUSHCMD;" > "$fifo" &
 	statusreturned=''
+	# The most important thing here was to turn output buffering of.
 	runwithcfg mysql -v -v -n < "$fifo" | grep --line-buffered -Ev "^(|-.*|$FLUSHCMD;?)\$" | while read line; do
 		if [ -z "$statusreturned" ]; then
 			statusreturned=y
+			# TODO: Check whether we actually got an OK response.
+			# Call the LVM to create the snapshot. This will block until done.
+			createsnapshot
+			# Now the database may be accessed again.
 			echo -e 'UNLOCK TABLES;\n\q' > "$fifo"
 		fi
 	done
