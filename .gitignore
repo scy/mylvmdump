@@ -1,5 +1,6 @@
 mylvmdump.conf
 mylvmdump.conf.minimal
+*.sql
 *.sql.*
 commit.sh
 mylvmdump.stable
