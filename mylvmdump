@@ -167,28 +167,19 @@ gettablesmatching() {
 
 # Create an LVM snapshot of the database.
 snapshot() {
-	# Check whether the FIFO directory exists.
-	if [ -e "$fifodir" ]; then
+	# Check whether the FIFO exists.
+	if [ -e "$fifo" ]; then
 		# TODO: Create a 'destroyfifo' option.
-		die 'FIFO directory already exists.'
+		die "FIFO '$fifo' already exists."
 	fi
-	# Create the FIFO directory and the FIFOs inside.
-	if mkdir "$fifodir"; then
-		for fifo in 'command' 'reply'; do
-			if ! mkfifo -m 0600 "$fifodir/$fifo"; then
-				rm -rf "$fifodir"
-				die "Could not create FIFO '$fifo'."
-			fi
-		done
-	else
-		die "Could not create FIFO directory '$fifodir'."
-	fi
-	echo "$FLUSHCMD;" > "$fifodir/command" &
+	# Create the FIFO.
+	mkfifo -m 0600 "$fifo" || die "Could not create FIFO '$fifo'."
+	echo "$FLUSHCMD;" > "$fifo" &
 	statusreturned=''
-	runwithcfg mysql -v -v -n < "$fifodir/command" | grep --line-buffered -Ev "^(|-.*|$FLUSHCMD;?)\$" | while read line; do
+	runwithcfg mysql -v -v -n < "$fifo" | grep --line-buffered -Ev "^(|-.*|$FLUSHCMD;?)\$" | while read line; do
 		if [ -z "$statusreturned" ]; then
 			statusreturned=y
-			echo -e 'UNLOCK TABLES;\n\q' > "$fifodir/command"
+			echo -e 'UNLOCK TABLES;\n\q' > "$fifo"
 		fi
 	done
 }
@@ -299,7 +290,7 @@ namepattern='$(date "+%Y-%m-%d_%H-%M-%S")_${database}.sql${compresssuffix}'
 temppattern='$dumpname.tmp'
 dbfilterdefault='+'
 tablefilterdefault='+'
-fifodir='fifos'
+fifo='command.fifo'
 
 # Read command-line options.
 purgeonly=n
