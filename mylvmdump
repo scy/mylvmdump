@@ -162,6 +162,19 @@ gettablesmatching() {
 	done
 }
 
+# Purge older dumps, if configured to.
+purge() {
+	# First, cut off empty lines.
+	purge="$(echo "$purge" | grep -Ev '^[[:space:]]*$')"
+	echo "$purge" | while read line; do
+		pattern="$(echo "$line" | cut -d '|' -f 1)"
+		date="$(echo "$line" | cut -d '|' -f 2)"
+		echo "Purging all '$pattern' older than $date... "
+		find -name "$pattern" -and -not -newermt "$date" -print -exec rm '{}' \; | sed -e 's/^/\t/'
+	done
+}
+
+
 # Read command-line options.
 purgeonly=n
 configfile=mylvmdump.conf
@@ -308,15 +321,7 @@ if ! bool purgeonly; then
 	done
 fi
 
-# Purge older dumps, if configured to.
-# First, cut off empty lines.
-purge="$(echo "$purge" | grep -Ev '^[[:space:]]*$')"
-echo "$purge" | while read line; do
-	pattern="$(echo "$line" | cut -d '|' -f 1)"
-	date="$(echo "$line" | cut -d '|' -f 2)"
-	echo "Purging all '$pattern' older than $date... "
-	find -name "$pattern" -and -not -newermt "$date" -print -exec rm '{}' \; | sed -e 's/^/\t/'
-done
+purge
 
 # This will be used later on.
 # lvs --noheadings --nosuffix --separator : --units b --options lv_name,lv_size | sed -r -e 's/^ +//'
