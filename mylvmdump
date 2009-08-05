@@ -387,6 +387,19 @@ fi
 
 # If we're not only purging, we're actually doing backups. Yay!
 if ! bool purgeonly; then
+	if bool uselvm; then
+		# Auto-guess values that are not set.
+		if [ -z "$datadir" ]; then
+			datadir="$((runwithcfg mysql $PARSEABLE | cut -f 2-) <<-"EOF"
+				SHOW VARIABLES WHERE Variable_name='datadir';
+				EOF
+				)"
+			[ -z "$datadir" ] && die 'Cannot guess $datadir, please supply manually.'
+		fi
+		# Canonicalize.
+		datadir="$(autosudo readlink -e "$datadir")"
+		[ -z "$datadir" ] && die 'Cannot canonicalize $datadir. This is probably an access right problem.'
+	fi
 	snapshot
 	backup
 fi

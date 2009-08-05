@@ -123,6 +123,12 @@ uselvm='no'
 # Default shown below.
 fifo='command.fifo'
 
+# The data directory of your MySQL server. mylvmdump should normally be able to
+# auto-detect it (therefore this is unset by default), but you might have to
+# specify it manually. Note that the user running mylvmdump needs read access to
+# this directory when LVM is used.
+datadir='/var/lib/mysql'
+
 
 # Since you might want to delete older dumps on a regular basis, mylvmdump makes
 # it easy. Enter a file pattern and a date(1) compatible time specification to
