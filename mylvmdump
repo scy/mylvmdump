@@ -210,7 +210,7 @@ snapshot() {
 			# Call the LVM to create the snapshot. This will block until done.
 			createsnapshot
 			# Now the database may be accessed again.
-			echo -e 'UNLOCK TABLES;\n\q' > "$fifo"
+			echo -e 'UNLOCK TABLES;\n\\q' > "$fifo"
 		fi
 	done
 }
