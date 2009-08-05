@@ -332,6 +332,17 @@ stat -c %A "$configfile" | grep -q 'w....$' 2>/dev/null && echo 'SECURITY WARNIN
 # Read configuration values.
 source "$configfile" || die 'could not read configuration file'
 
+# Check whether sudo should be used or not.
+alias autosudo=
+if [ "$(id -u)" -ne 0 ]; then            # I am not root...
+	if which sudo >/dev/null 2>&1; then  # ...but sudo is available
+		alias autosudo='sudo -n'
+	else                                 # ...and sudo is not available
+		echo 'Not running as root, sudo not available. Not using LVM.' >&2
+		uselvm=no
+	fi
+fi
+
 # Check and parse the keepfree value.
 # First, translate to upper case and remove spaces.
 keepfree="$(echo "$keepfree" | tr a-z A-Z | tr -d ' \t')"
