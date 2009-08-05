@@ -256,6 +256,15 @@ purge() {
 
 
 
+# Define reasonable defaults for config variables.
+user='root'
+pass=''
+host='localhost'
+namepattern='$(date "+%Y-%m-%d_%H-%M-%S")_${database}.sql${compresssuffix}'
+temppattern='$dumpname.tmp'
+dbfilterdefault='+'
+tablefilterdefault='+'
+
 # Read command-line options.
 purgeonly=n
 configfile=mylvmdump.conf
