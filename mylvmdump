@@ -213,6 +213,8 @@ snapshot() {
 			echo -e 'UNLOCK TABLES;\n\\q' > "$fifo"
 		fi
 	done
+	# Remove the FIFO.
+	rm "$fifo"
 }
 
 # The main backup act.
