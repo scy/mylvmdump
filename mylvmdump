@@ -255,6 +255,7 @@ purge() {
 }
 
 
+
 # Read command-line options.
 purgeonly=n
 configfile=mylvmdump.conf
