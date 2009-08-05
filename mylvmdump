@@ -164,8 +164,6 @@ gettablesmatching() {
 
 # Purge older dumps, if configured to.
 purge() {
-	# First, cut off empty lines.
-	purge="$(echo "$purge" | grep -Ev '^[[:space:]]*$')"
 	echo "$purge" | while read line; do
 		pattern="$(echo "$line" | cut -d '|' -f 1)"
 		date="$(echo "$line" | cut -d '|' -f 2)"
@@ -215,6 +213,9 @@ else
 	keepfree_num=''
 	keepfree_suf=''
 fi
+
+# Cut off empty lines in "purge".
+purge="$(echo "$purge" | grep -Ev '^[[:space:]]*$')"
 
 # Set the precompress command.
 compressdefaults=y # Means "this is a 'normal' compression algorithm".
