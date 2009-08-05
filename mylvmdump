@@ -246,6 +246,10 @@ backup() {
 
 # Purge older dumps, if configured to.
 purge() {
+	if [ -z "$purge" ]; then
+		echo 'No purging configured.'
+		return
+	fi
 	echo "$purge" | while read line; do
 		pattern="$(echo "$line" | cut -d '|' -f 1)"
 		date="$(echo "$line" | cut -d '|' -f 2)"
