@@ -111,6 +111,14 @@ tempexists='yes'
 keepfree='4G'
 
 
+# Whether you actually want to use the LVM features of mylvmdump. Note that
+# setting this to yes will make mylvmdump depend on some root privileges. You
+# may either run it as root (NOT RECOMMENDED) or provide the "sudo" command and
+# allow certain commands (TODO: list which ones) to be run as root in the sudo
+# configuration. Defaults to 'no'.
+uselvm='no'
+
+
 # Since you might want to delete older dumps on a regular basis, mylvmdump makes
 # it easy. Enter a file pattern and a date(1) compatible time specification to
 # select the maximum file age, delimited by a pipe character ("|"). You may

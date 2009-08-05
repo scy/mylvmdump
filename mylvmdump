@@ -173,6 +173,8 @@ createsnapshot() {
 
 # Create an LVM snapshot of the database.
 snapshot() {
+	# If LVM is not to be used, do nothing.
+	bool uselvm || return
 	# Check whether the FIFO exists.
 	if [ -e "$fifo" ]; then
 		# TODO: Create a 'destroyfifo' option.
