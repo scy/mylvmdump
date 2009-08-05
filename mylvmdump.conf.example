@@ -118,6 +118,11 @@ keepfree='4G'
 # configuration. Defaults to 'no'.
 uselvm='no'
 
+# mylvmdump needs a FIFO (a named pipe) to communicate with MySQL when using the
+# LVM features. Use this setting to specify where the FIFO will be created.
+# Default shown below.
+fifo='command.fifo'
+
 
 # Since you might want to delete older dumps on a regular basis, mylvmdump makes
 # it easy. Enter a file pattern and a date(1) compatible time specification to
