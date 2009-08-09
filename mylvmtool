@@ -1,10 +1,10 @@
 #!/bin/sh
 
 COMMANDS='
-?:=help
 help:Show a list of possible commands.
-exit:=quit
+?:=help
 quit:Exit mylvmtool.
+exit:=quit
 '
 
 # Show usage information and exit.
