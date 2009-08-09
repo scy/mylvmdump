@@ -3,6 +3,7 @@
 COMMANDS='
 help:Show a list of possible commands.
 ?:=help
+vgfree:Return number of free bytes for given VG.
 quit:Exit mylvmtool.
 exit:=quit
 '
@@ -59,6 +60,11 @@ dispatch() {
 		return 0
 	fi
 	return "$r"
+}
+
+# Return the number of bytes free in volume group $1.
+vgfree() {
+	vgs --noheadings --nosuffix --separator : --units b --options vg_free "$1"
 }
 
 # Show help, directly created from $COMMANDS.
