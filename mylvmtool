@@ -5,7 +5,7 @@ help:Show a list of possible commands.
 ?:=help
 vgfree:Return number of free bytes for given VG.
 lvsize:Return size of VG LV in bytes.
-enoughspace:Is there enough space for equal-size snapshot of VG LV?
+enoughspace:Is there enough space for equal-size snapshot of given VG LV or DB?
 dbmount:Which mount point stores given database?
 dblv:Which VG/LV stores given database?
 quit:Exit mylvmtool.
@@ -106,6 +106,10 @@ lvsize() {
 # Return whether there is enough space for an equal-size snapshot of volume $2
 # in volume group $1.
 enoughspace() {
+	if [ -z "$2" ]; then
+		enoughspace $(dblv "$1")
+		return "$?"
+	fi
 	vg="$(lvmname "$1")"
 	lv="$(lvmname "$2")"
 	d="$(($(vgfree "$vg") - $(lvsize "$vg" "$lv")))"
