@@ -1,0 +1,34 @@
+#!/bin/sh
+
+# Show usage information and exit.
+usage() {
+	cat <<-EOF
+		usage: mylvmtool -d <datadir>
+
+		  mylvmtool is a helper application for mylvmdump and is not intended to
+		  be called by the user directly. It needs to be run as root.
+
+		  Once started, it reads simple commands from standard input to query and
+		  manipulate the LVM. Use the "?" command to retrieve a command list.
+
+		-d <datadir>  The base directory for MySQL databases.
+	EOF
+	exit 0
+}
+
+# If no options are supplied, quit with usage message.
+[ -z "$*" ] && usage
+
+# Parse options.
+while getopts d:h o; do
+	case "$o" in
+		d)
+			# Set datadir to the option value.
+			datadir="$OPTARG"
+			;;
+		*)
+			# On all other (including not understood) options, quit with usage.
+			usage
+			;;
+	esac
+done
