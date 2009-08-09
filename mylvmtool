@@ -7,6 +7,7 @@ vgfree:Return number of free bytes for given VG.
 lvsize:Return size of VG LV in bytes.
 enoughspace:Is there enough space for equal-size snapshot of VG LV?
 dbmount:Which mount point stores given database?
+dblv:Which VG/LV stores given database?
 quit:Exit mylvmtool.
 exit:=quit
 '
@@ -119,6 +120,15 @@ enoughspace() {
 dbmount() {
 	db="$(echo "$1" | tr -d /)"
 	echo "$(findfsroot "$datadir/$db")"
+}
+
+# Return volume group and LV name that stores database $1.
+dblv() {
+	mnt="$(dbmount "$1")"
+	dev="$(readlink -e "$(mount | sed -n -e "s/^\\(.\\+\\) on $(echo "$mnt" | sed -e 's/\//\\\//g') type .\+$/\1/p")")"
+	maj="$((0x$(stat -c %t "$dev")))"
+	min="$((0x$(stat -c %T "$dev")))"
+	lvm lvs --options lv_kernel_major,lv_kernel_minor,vg_name,lv_name | sed -n -e "s/^$maj:$min:\\(.\\+\\):\\(.\\+\\)$/\\1 \\2/p"
 }
 
 # Show help, directly created from $COMMANDS.
