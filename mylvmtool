@@ -56,7 +56,7 @@ dispatch() {
 		r="$?"
 	else
 		echo 'Command not found. Use "help" for more information.' >&2
-		return 1
+		return 0
 	fi
 	return "$r"
 }
