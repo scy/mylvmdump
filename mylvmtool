@@ -52,10 +52,13 @@ dispatch() {
 		[ -n "$al" ] && cmd="$al"
 		# Run the command.
 		"$cmd" "$@"
+		# Store the return value.
+		r="$?"
 	else
 		echo 'Command not found. Use "help" for more information.' >&2
 		return 1
 	fi
+	return "$r"
 }
 
 # Show help, directly created from $COMMANDS.
@@ -70,6 +73,12 @@ help() {
 		# Output the line.
 		printf '%18s  %s\n' "$cmd" "$dsc"
 	done
+}
+
+# Quit mylvmtool.
+quit() {
+	echo 'Bye.'
+	return 1
 }
 
 
@@ -105,8 +114,9 @@ while read -p 'mylvmtool> ' line; do
 	# params is the rest.
 	params="$(echo "$line" | cut -d ' ' -f 2-)"
 	# Dispatch the command
-	dispatch "$cmd" "$params"
+	dispatch "$cmd" "$params" || break
 done
 
 # Exit.
+echo
 exit 0
