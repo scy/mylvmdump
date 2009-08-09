@@ -80,8 +80,8 @@ while read line; do
 	# Replace tabs with spaces and remove multiple spaces and spaces at
 	# beginning and end.
 	line="$(echo "$line" | tr '\t' ' ' | sed -e 's/^ \+//' -e 's/ \+$//' -e 's/ \+/ /g')"
-	# cmd is the first word.
-	cmd="$(echo "$line" | cut -d ' ' -f 1)"
+	# cmd is the first word, all special characters removed.
+	cmd="$(echo "$line" | tr -cd 'a-zA-Z0-9_? -' | cut -d ' ' -f 1)"
 	# params is the rest.
 	params="$(echo "$line" | cut -d ' ' -f 2-)"
 	# Dispatch the command
