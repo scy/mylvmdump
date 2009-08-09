@@ -3,8 +3,8 @@
 COMMANDS='
 ?:=help
 help:Show a list of possible commands.
-quit:=exit
-exit:Exit mylvmtool.
+exit:=quit
+quit:Exit mylvmtool.
 '
 
 # Show usage information and exit.
