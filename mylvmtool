@@ -75,7 +75,7 @@ lvmname() {
 	# According to lvm(8), these are the valid characters.
 	vg="$(echo "$1" | tr -cd 'a-zA-Z0-9+_.-')"
 	# Warning if we had to remove characters.
-	[ "$vg" != "$1" ] && echo "warning: invalid characters in LVM name removed, is now '$vg'" >&2
+	[ "$vg" != "$1" ] && echo "warning: invalid characters in LVM name removed, resulting in '$vg'" >&2
 	# According to lvm(8), LV and VG names may not start with a hyphen.
 	if [ "$(echo "$vg" | cut -b 1)" = '-' ]; then
 		echo 'warning: LVM names may not start with a hyphen, removing it' >&2
