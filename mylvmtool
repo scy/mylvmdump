@@ -1,5 +1,12 @@
 #!/bin/sh
 
+COMMANDS='
+?:=help
+help:Show a list of possible commands.
+quit:=exit
+exit:Exit mylvmtool.
+'
+
 # Show usage information and exit.
 usage() {
 	cat <<-EOF
@@ -32,6 +39,19 @@ findfsroot() {
 	echo "$dir"
 }
 
+# Check whether $1 is a valid command and run it.
+dispatch() {
+	# Store and shift.
+	cmd="$1"; shift
+	# Check whether $cmd is in the commands list and run it.
+	if echo "$COMMANDS" | grep -q "^$cmd:"; then
+		"$cmd" "$@"
+	else
+		echo 'Command not found. Use "help" for more information.' >&2
+		return 1
+	fi
+}
+
 
 
 # If no options are supplied, quit with usage message.
@@ -54,3 +74,19 @@ while getopts d:h o; do
 			;;
 	esac
 done
+
+# Main parser loop.
+while read line; do
+	# Replace tabs with spaces and remove multiple spaces and spaces at
+	# beginning and end.
+	line="$(echo "$line" | tr '\t' ' ' | sed -e 's/^ \+//' -e 's/ \+$//' -e 's/ \+/ /g')"
+	# cmd is the first word.
+	cmd="$(echo "$line" | cut -d ' ' -f 1)"
+	# params is the rest.
+	params="$(echo "$line" | cut -d ' ' -f 2-)"
+	# Dispatch the command
+	dispatch "$cmd" "$params"
+done
+
+# Exit.
+exit 0
