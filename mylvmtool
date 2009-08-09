@@ -36,7 +36,6 @@ findfsroot() {
 		dir="$1"
 	fi
 	while [ "$(stat -c %d "$dir")" -eq "$(stat -c %d "$dir/..")" -o "$dir" == '/' ]; do
-		echo "$dir" >&2
 		dir="$(readlink -m "$dir/..")"
 	done
 	echo "$dir"
