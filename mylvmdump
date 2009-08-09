@@ -201,7 +201,7 @@ snapshot() {
 	fi
 	# Create the FIFO.
 	mkfifo -m 0600 "$fifo" || die "Could not create FIFO '$fifo'."
-	# The following would lock until the reader (mysql) terminated, which is not
+	# The following would lock until the reader (mysql) started, which is not
 	# what we want. Therefore, run it in the background.
 	echo "$FLUSHCMD;" > "$fifo" &
 	statusreturned=''
