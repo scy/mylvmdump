@@ -6,6 +6,7 @@ help:Show a list of possible commands.
 vgfree:Return number of free bytes for given VG.
 lvsize:Return size of VG LV in bytes.
 enoughspace:Is there enough space for equal-size snapshot of VG LV?
+dbmount:Which mount point stores given database?
 quit:Exit mylvmtool.
 exit:=quit
 '
@@ -112,6 +113,12 @@ enoughspace() {
 	else
 		echo "no, $((-1 * $d)) bytes free space lacking"
 	fi
+}
+
+# Return the mount point for database $1.
+dbmount() {
+	db="$(echo "$1" | tr -d /)"
+	echo "$(findfsroot "$datadir/$db")"
 }
 
 # Show help, directly created from $COMMANDS.
