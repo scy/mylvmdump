@@ -4,6 +4,7 @@ COMMANDS='
 help:Show a list of possible commands.
 ?:=help
 vgfree:Return number of free bytes for given VG.
+lvsize:Return size of VG LV in bytes.
 quit:Exit mylvmtool.
 exit:=quit
 '
@@ -92,6 +93,14 @@ vgfree() {
 	lvm vgs --options vg_free "$vg"
 }
 
+# Return the size of volume $2 in volume group $1 in bytes.
+lvsize() {
+	vg="$(lvmname "$1")"
+	lv="$(lvmname "$2")"
+	# The sed expression needs "." to be escaped.
+	lvm lvs --options lv_name,lv_size "$vg" | sed -n -e "s/^$(echo "$lv" | sed -e 's/\./\\./g'):\\(.\\+\\)/\\1/p"
+}
+
 # Show help, directly created from $COMMANDS.
 help() {
 	echo "$COMMANDS" | while read line; do
@@ -139,14 +148,14 @@ done
 eof=0
 while true; do
 	# Read a line into multiple variables.
-	read -p 'mylvmtool> ' cmd a rest
+	read -p 'mylvmtool> ' cmd a b rest
 	# Check the return status.
 	eof="$?"
 	[ "$eof" -eq 0 ] || break
 	# Remove all special characters from $cmd.
 	cmd="$(echo "$cmd" | tr -cd 'a-zA-Z0-9_?-')"
 	# Dispatch the command
-	dispatch "$cmd" "$a" "$rest" || break
+	dispatch "$cmd" "$a" "$b" "$rest" || break
 done
 
 # If EOF was given on a terminal, send a newline for more beauty.

@@ -407,6 +407,3 @@ if ! bool purgeonly; then
 fi
 
 purge
-
-# This will be used later on.
-# lvs --noheadings --nosuffix --separator : --units b --options lv_name,lv_size | sed -r -e 's/^ +//'
