@@ -5,6 +5,7 @@ help:Show a list of possible commands.
 ?:=help
 vgfree:Return number of free bytes for given VG.
 lvsize:Return size of VG LV in bytes.
+enoughspace:Is there enough space for equal-size snapshot of VG LV?
 quit:Exit mylvmtool.
 exit:=quit
 '
@@ -99,6 +100,19 @@ lvsize() {
 	lv="$(lvmname "$2")"
 	# The sed expression needs "." to be escaped.
 	lvm lvs --options lv_name,lv_size "$vg" | sed -n -e "s/^$(echo "$lv" | sed -e 's/\./\\./g'):\\(.\\+\\)/\\1/p"
+}
+
+# Return whether there is enough space for an equal-size snapshot of volume $2
+# in volume group $1.
+enoughspace() {
+	vg="$(lvmname "$1")"
+	lv="$(lvmname "$2")"
+	d="$(($(vgfree "$vg") - $(lvsize "$vg" "$lv")))"
+	if [ "$d" -ge 0 ]; then
+		echo "yes, $d bytes excess space afterwards"
+	else
+		echo "no, $((-1 * $d)) bytes free space lacking"
+	fi
 }
 
 # Show help, directly created from $COMMANDS.
