@@ -111,7 +111,13 @@ while getopts d:h o; do
 done
 
 # Main parser loop.
-while read -p 'mylvmtool> ' line; do
+eof=0
+while true; do
+	# Read a line.
+	read -p 'mylvmtool> ' line
+	# Check the return status.
+	eof="$?"
+	[ "$eof" -eq 0 ] || break
 	# Replace tabs with spaces and remove multiple spaces and spaces at
 	# beginning and end.
 	line="$(echo "$line" | tr '\t' ' ' | sed -e 's/^ \+//' -e 's/ \+$//' -e 's/ \+/ /g')"
@@ -123,6 +129,7 @@ while read -p 'mylvmtool> ' line; do
 	dispatch "$cmd" "$params" || break
 done
 
+# If EOF was given on a terminal, send a newline for more beauty.
+[ "$eof" -ne 0 ] && tty >/dev/null && echo
 # Exit.
-echo
 exit 0
