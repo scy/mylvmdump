@@ -401,9 +401,6 @@ if ! bool purgeonly; then
 				)"
 			[ -z "$datadir" ] && die 'Cannot guess $datadir, please supply manually.'
 		fi
-		# Canonicalize.
-		datadir="$(autosudo readlink -e "$datadir")"
-		[ -z "$datadir" ] && die 'Cannot canonicalize $datadir. This is probably an access right problem.'
 	fi
 	snapshot
 	backup

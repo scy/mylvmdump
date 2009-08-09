@@ -41,8 +41,12 @@ findfsroot() {
 while getopts d:h o; do
 	case "$o" in
 		d)
-			# Set datadir to the option value.
-			datadir="$OPTARG"
+			# Set datadir to the checked option value.
+			datadir="$(readlink -e "$OPTARG")"
+			if [ -z "$datadir" ]; then
+				echo 'cannot canonicalize datadir' >&2
+				exit 1
+			fi
 			;;
 		*)
 			# On all other (including not understood) options, quit with usage.
