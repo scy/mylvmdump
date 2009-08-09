@@ -165,22 +165,6 @@ gettablesmatching() {
 	done
 }
 
-# Find the root of the filesystem containing $1.
-findfsroot() {
-	# Canonicalize $dir to be a directory, regardless of whether $1 is a file or
-	# a directory.
-	if [ "$(autosudo stat -c %A "$1" | cut -b 1)" != 'd' ]; then
-		dir="$(dirname "$1")"
-	else
-		dir="$1"
-	fi
-	while [ "$(autosudo stat -c %d "$dir")" -eq "$(autosudo stat -c %d "$dir/..")" -o "$dir" == '/' ]; do
-		echo "$dir" >&2
-		dir="$(autosudo readlink -m "$dir/..")"
-	done
-	echo "$dir"
-}
-
 # Assume that the tables are frozen and create the snapshot.
 createsnapshot() {
 	# TODO.
