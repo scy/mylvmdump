@@ -96,7 +96,7 @@ while getopts d:h o; do
 done
 
 # Main parser loop.
-while read line; do
+while read -p 'mylvmtool> ' line; do
 	# Replace tabs with spaces and remove multiple spaces and spaces at
 	# beginning and end.
 	line="$(echo "$line" | tr '\t' ' ' | sed -e 's/^ \+//' -e 's/ \+$//' -e 's/ \+/ /g')"
