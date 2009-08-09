@@ -58,6 +58,20 @@ dispatch() {
 	fi
 }
 
+# Show help, directly created from $COMMANDS.
+help() {
+	echo "$COMMANDS" | while read line; do
+		# If the line is empty, read the next one.
+		[ -z "$line" ] && continue
+		# Everything up to the colon is the command.
+		cmd="$(echo "$line" | cut -d : -f 1)"
+		# Everything after the description.
+		dsc="$(echo "$line" | cut -d : -f 2- | sed -e 's/^=/  alias for /')"
+		# Output the line.
+		printf '%18s  %s\n' "$cmd" "$dsc"
+	done
+}
+
 
 
 # If no options are supplied, quit with usage message.
