@@ -43,8 +43,14 @@ findfsroot() {
 dispatch() {
 	# Store and shift.
 	cmd="$1"; shift
-	# Check whether $cmd is in the commands list and run it.
-	if echo "$COMMANDS" | grep -q "^$cmd:"; then
+	# Retrieve the matching line from $COMMANDS, if any.
+	line="$(echo "$COMMANDS" | grep "^$cmd:")"
+	# If such a line exists, run the command.
+	if [ -n "$line" ]; then
+		# But first, resolve a possible alias.
+		al="$(echo "$line" | sed -n -e 's/^.\+:=\(.\+\)$/\1/p')"
+		[ -n "$al" ] && cmd="$al"
+		# Run the command.
 		"$cmd" "$@"
 	else
 		echo 'Command not found. Use "help" for more information.' >&2
