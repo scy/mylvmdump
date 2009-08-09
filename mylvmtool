@@ -62,9 +62,17 @@ dispatch() {
 	return "$r"
 }
 
+# Run an lvm info command like "lvs" or "vgs" with default parameters.
+lvm() {
+	# Cut off the command to actually run.
+	cmd="$1"; shift
+	# Run.
+	"$cmd" --noheadings --nosuffix --separator : --units b "$@" | sed -e 's/^ \+//'
+}
+
 # Return the number of bytes free in volume group $1.
 vgfree() {
-	vgs --noheadings --nosuffix --separator : --units b --options vg_free "$1"
+	lvm vgs --options vg_free "$1"
 }
 
 # Show help, directly created from $COMMANDS.
