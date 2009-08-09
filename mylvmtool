@@ -70,9 +70,26 @@ lvm() {
 	"$cmd" --noheadings --nosuffix --separator : --units b "$@" | sed -e 's/^ \+//'
 }
 
+# Reduce $1 to valid LVM name characters and complain if it starts with "-".
+lvmname() {
+	# According to lvm(8), these are the valid characters.
+	vg="$(echo "$1" | tr -cd 'a-zA-Z0-9+_.-')"
+	# Warning if we had to remove characters.
+	[ "$vg" != "$1" ] && echo "warning: invalid characters in LVM name removed, is now '$vg'" >&2
+	# According to lvm(8), LV and VG names may not start with a hyphen.
+	if [ "$(echo "$vg" | cut -b 1)" = '-' ]; then
+		echo 'warning: LVM names may not start with a hyphen, removing it' >&2
+		# Remove possibly more than one hyphen it the beginning.
+		vg="$(echo "$vg" | sed -e 's/^-\+//')"
+	fi
+	# Output the result.
+	echo "$vg"
+}
+
 # Return the number of bytes free in volume group $1.
 vgfree() {
-	lvm vgs --options vg_free "$1"
+	vg="$(lvmname "$1")"
+	lvm vgs --options vg_free "$vg"
 }
 
 # Show help, directly created from $COMMANDS.
