@@ -222,6 +222,9 @@ backup() {
 		fi
 		# Build file name according to configured pattern.
 		dumpname="$(eval "echo $namepattern")"
+		# Split into directory and file name.
+		dumpdir="$(dirname "$dumpname")"
+		dumpfile="$(basename "$dumpname")"
 		echo "$database  ==>  $dumpname"
 		# Store the time we started at.
 		started="$(date +%s)"
