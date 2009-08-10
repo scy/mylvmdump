@@ -39,7 +39,7 @@ dbfilter='
 .+logarithms
 '
 
-# The default inclusion flag, if no dbfilter line matches.
+# The default inclusion flag, if no dbfilter line matches. Defaults to "+".
 dbfilterdefault='+'
 
 # The same thing is possible for tables. The major difference is that the filter
@@ -75,7 +75,7 @@ tablefilter_md5_2f43b42fd833d1e77420a8dae7419000='
 +nonsense
 '
 
-# See the dbfilterdefault variable. "~" is allowed.
+# See the dbfilterdefault variable. "~" is allowed. Again defaults to "+".
 tablefilterdefault='+'
 
 
