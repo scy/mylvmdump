@@ -98,7 +98,7 @@ namepattern='/var/backups/mysql/$(date "+%Y-%m-%d_%H-%M-%S")_${database}.sql${co
 # ${dumpname}, or access directory and filename seperately using the variables
 # ${dumpdir} and ${dumpfile}. Use of mktemp is suggested. Please see the
 # tempexists setting.
-temppattern='$(mktemp -q --tmpdir=$dumpdir "$dumpfile.tmp.XXXXXXXXXX")'
+temppattern='$(mktemp -q --tmpdir="$dumpdir" "$dumpfile.tmp.XXXXXXXXXX")'
 
 # Whether the file name in temppattern should be checked fo existence. If this
 # is set, mylvmdump will exit with an error if the temp file does not already
