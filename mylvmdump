@@ -311,6 +311,7 @@ pass=''
 host='localhost'
 namepattern='$(date "+%Y-%m-%d_%H-%M-%S")_${database}.sql${compresssuffix}'
 temppattern='$dumpname.tmp'
+cd='.'
 dbfilterdefault='+'
 tablefilterdefault='+'
 fifo='command.fifo'
@@ -405,8 +406,15 @@ if ! bool purgeonly; then
 			[ -z "$datadir" ] && die 'Cannot guess $datadir, please supply manually.'
 		fi
 	fi
+	# Take a snapshot (if configured to).
 	snapshot
+	# Change to the directory to put the files into.
+	cd "$cd"
+	# Do the actual backup.
 	backup
 fi
 
+# Purge older files.
 purge
+# If we did a backup, change to the directory we initially were in.
+bool purgeonly || cd - >/dev/null

@@ -79,6 +79,11 @@ tablefilter_md5_2f43b42fd833d1e77420a8dae7419000='
 tablefilterdefault='+'
 
 
+# The directory to change to before storing the dumps. This works like tar's
+# -C option and is valid during dumping and purging. It should be used
+# preferably over setting a directory in $namepattern. Defaults to ".".
+cd='/var/backups/mysql'
+
 # File name pattern of the generated files.
 # You may insert any shell construct here, although variables should be
 # sufficient for most users. Some variables you might want to use are:
@@ -90,7 +95,7 @@ tablefilterdefault='+'
 # use double quotes inside it and don't add security holes. If a variable name
 # is followed by a character that's valid in variable names, use the syntax
 # '${variable}moretext' as shown in the example. If unsure, always use {}.
-namepattern='/var/backups/mysql/$(date "+%Y-%m-%d_%H-%M-%S")_${database}.sql${compresssuffix}'
+namepattern='$(date "+%Y-%m-%d_%H-%M-%S")_${database}.sql${compresssuffix}'
 
 # Temporary file name while dumping. Set to the empty string to dump directly
 # into the final file name. You may use the same variables and constructs as in
