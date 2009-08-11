@@ -371,7 +371,7 @@ fi
 # Cut off empty lines in "purge".
 purge="$(echo "$purge" | grep -Ev '^[[:space:]]*$')"
 
-# Set the precompress command.
+# Set the compress command.
 compressdefaults=y # Means "this is a 'normal' compression algorithm".
 case "$compress" in
 	gzip)
