@@ -115,7 +115,7 @@ tempexists='yes'
 # You may use suffixes like K, M, G, T etc. Note that this is only checked
 # before each dump. No further checks will be made while the dump of a single
 # database is running, so make sure no dump will be larger than this value.
-keepfree='4G'
+keepfree='1G'
 
 
 # Whether you actually want to use the LVM features of mylvmdump. Note that
@@ -150,10 +150,10 @@ datadir='/var/lib/mysql'
 # enter multiple lines to do several runs with different patterns or times.
 # Internally this is passed to "find -name PATTERN -and -not -newermt TIME",
 # you are encouraged to test your patterns using find(1). The example will
-# delete some files if they are older than 6 hours, others if older than 24.
+# delete some files if they are older than 24 hours, others if older than 72.
 purge='
-????-??-??_??-??-??_*.sql.*|6 hours ago
-*.sql.*|24 hours ago
+????-??-??_??-??-??_*.sql.*|24 hours ago
+*.sql.*|72 hours ago
 '
 
 
