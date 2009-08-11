@@ -272,7 +272,7 @@ backup() {
 						runwithcfg mysqldump $DUMPOPTS "$database" --no-data --tables "$table"
 					done
 				fi
-			) | "$compresscmd" > "$tempname"
+			) | "$compresscmd" | $cryptcmd > "$tempname"
 			# If we have to move the tempfile, move it move it.
 			[ "$movetemp" = 'y' ] && mv "$tempname" "$dumpname"
 			runhook after_dump
@@ -309,7 +309,7 @@ purge() {
 user='root'
 pass=''
 host='localhost'
-namepattern='$(date "+%Y-%m-%d_%H-%M-%S")_${database}.sql${compresssuffix}'
+namepattern='$(date "+%Y-%m-%d_%H-%M-%S")_${database}.sql${suffixes}'
 temppattern='$dumpname.tmp'
 cd='.'
 dbfilterdefault='+'
@@ -391,6 +391,21 @@ if [ "$compressdefaults" = 'y' ]; then
 	compresssuffix=".$compresstype"
 	compresscmd="$compress"
 fi
+
+# Set the crypt command.
+case "$crypt" in
+	gpg|gpg:*)
+		cryptsuffix='.gpg'
+		cryptcmd="gpg --compress-algo none --batch --no-tty --quiet --encrypt $(echo "$crypt" | cut -d : -f 2-)"
+		;;
+	*)
+		cryptsuffix=''
+		cryptcmd='cat'
+		;;
+esac
+
+# Set suffixes.
+suffixes="$compresssuffix$cryptsuffix"
 
 
 

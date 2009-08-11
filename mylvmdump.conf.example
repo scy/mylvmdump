@@ -25,6 +25,16 @@ host='dbserver'
 compress='gzip'
 
 
+# Encryption tool to use. The format is "tool:parameters", where "tool" is one
+# out of the list below and "parameters" are tool-specific options. Current
+# choices are:
+# gpg (any non-ancient version should work; PGP compression will be disabled,
+#      please choose a $compress algorithm above; all parameters will be passed
+#      verbatim to gpg)
+# cat (will not encrypt at all; the default)
+crypt='gpg:--recipient 0xc4f3b4b3'
+
+
 # Controls which databases will be backed up and which not. Format is:
 # One expression per line, consisting of an optional mode prefix, an inclusion
 # flag (+ or -) and the database name or expression (depending on the mode
@@ -88,14 +98,13 @@ cd='/var/backups/mysql'
 # You may insert any shell construct here, although variables should be
 # sufficient for most users. Some variables you might want to use are:
 # $database        name of the database, e.g. 'mediawiki'
-# $compresstype    'gz', 'bz2' or the empty string '' if not compressing
-# $compresssuffix  $compresstype, but prefixed by a dot if non-empty ('.gz')
+# $suffixes        like '.gz.gpg', depending on $compress and $crypt
 # $(date "+...")   see date(1) for the available options
 # This string will be evaluated using "eval", so please put it in single quotes,
 # use double quotes inside it and don't add security holes. If a variable name
 # is followed by a character that's valid in variable names, use the syntax
 # '${variable}moretext' as shown in the example. If unsure, always use {}.
-namepattern='$(date "+%Y-%m-%d_%H-%M-%S")_${database}.sql${compresssuffix}'
+namepattern='$(date "+%Y-%m-%d_%H-%M-%S")_${database}.sql${suffixes}'
 
 # Temporary file name while dumping. Set to the empty string to dump directly
 # into the final file name. You may use the same variables and constructs as in
