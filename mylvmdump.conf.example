@@ -100,11 +100,15 @@ cd='/var/backups/mysql'
 # $database        name of the database, e.g. 'mediawiki'
 # $suffixes        like '.gz.gpg', depending on $compress and $crypt
 # $(date "+...")   see date(1) for the available options
+# $runstarted      epoch timestamp mylvmdump was started at
 # This string will be evaluated using "eval", so please put it in single quotes,
 # use double quotes inside it and don't add security holes. If a variable name
 # is followed by a character that's valid in variable names, use the syntax
 # '${variable}moretext' as shown in the example. If unsure, always use {}.
-namepattern='$(date "+%Y-%m-%d_%H-%M-%S")_${database}.sql${suffixes}'
+# Instead of using the current time when a single dump has started (the default)
+# you may use date's -d parameter to specify the time mylvmdump was started, as
+# shown below. This way all files from a single run will use the same timestamp.
+namepattern='$(date -d "@$runstarted" "+%Y-%m-%d_%H-%M-%S")_${database}.sql${suffixes}'
 
 # Temporary file name while dumping. Set to the empty string to dump directly
 # into the final file name. You may use the same variables and constructs as in

@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# Store the time we were started at.
+runstarted="$(date +%s)"
+
 # Do not log what we do.
 # It may be confusing when later using mysql interactively.
 export MYSQL_HISTFILE=/dev/null
