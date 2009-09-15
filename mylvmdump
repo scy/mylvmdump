@@ -209,6 +209,14 @@ snapshot() {
 
 # The main backup act.
 backup() {
+	# Announce backup.
+	echo -n "Starting backup to "
+	if [ "$cd" = '.' ]; then
+		echo 'current directory.'
+	else
+		echo "'$cd'."
+	fi
+
 	# Retrieve the list of databases.
 	databases="$(getdatabases)"
 	
