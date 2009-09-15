@@ -175,13 +175,12 @@ purge='
 
 # after_dump(): Called after a successful dump, i.e. after moving the temp file
 # (if any) to its final file name. Useful variables are $database and $dumpname.
-# This example will hard-link the file to a "daily" snapshot if the time is
-# between 4am and 8am. (Think of 4-hourly snapshots, one of which is selected as
-# the "daily" one.)
+# This example will hard-link the file to a "daily" snapshot (only having the
+# date, but not the time, in its file name) if the daily snapshot does not exist
+# yet.
 after_dump() {
-	hour="$(date +%-H)"
-	if [ "$hour" -ge 4 -a "$hour" -lt 8 ]; then
-		dailyname="$(echo "$dumpname" | sed -r -e 's/^([0-9-]+_)[0-9-]+_(.+)$/\1\2/')"
+	dailyname="$(echo "$dumpname" | sed -r -e 's/^([0-9-]+_)[0-9-]+_(.+)$/\1\2/')"
+	if ! [ -e "$dailyname" ]; then
 		ln "$dumpname" "$dailyname"
 	fi
 }
